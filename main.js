@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Ball } from './src/entities/ball';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { SurfaceEntity } from './src/entities/surface';
-import { createSurfaceEntity } from './src/helpers/generator';
+import { createSurfaceEntity, recycleSurfaceEntity } from './src/helpers/generator';
 
 // Set up the scene
 const scene = new THREE.Scene();
@@ -60,7 +60,7 @@ ball.meshShpere.position.y = 3;
 ball.cannonSphere.position.y = 3;
 
 // scene.add(surface.meshSurface);
-scene.add(ball.meshShpere)
+// scene.add(ball.meshShpere)
 // world.addBody(surface.cannonSurface);
 world.addBody(ball.cannonSphere);
 
@@ -99,17 +99,19 @@ const animate = () => {
   ball.meshShpere.position.copy(ball.cannonSphere.position);
   ball.meshShpere.quaternion.copy(ball.cannonSphere.quaternion);
   surfacePool.forEach((surface, index) => {
-    surface.move(0.04);
+
+    surface.move(0.06);
 
     const newZPosition = surface.meshSurface.depth;
-    console.log(ball)
     // Check if the surface is no longer visible
-    if (surface.meshSurface.position.z > 25) {
+    if (surface.meshSurface.position.z >= 20) {
       // Remove from the scene and world
-      scene.remove(surface.meshSurface);
-      world.remove(surface.cannonSurface);
+      // scene.remove(surface.meshSurface);
+      // world.remove(surface.cannonSurface);
       // Create a new surface entity and add it to the pool
-      // surfacePool[index] = createSurfaceEntity(scene, world);
+      const prevSurface = surfacePool[9];
+      recycleSurfaceEntity(surfacePool[index], -120);
+    
     }
   });
 
@@ -118,18 +120,32 @@ const animate = () => {
   renderer.render(scene, camera);
 };
 
+//Player Controller
 document.addEventListener('keydown', (event) => {
 
-  if (event.code === 'Space' && ball.isGrounded()) {
-    console.log('jumping');
-    ball.jump();
+  switch (event.key) {
+    case 'ArrowLeft':
+      ball.moveLeft();
+      break;
+    case 'ArrowRight':
+      ball.moveRight();
+      break;
+    // Add more cases for other controls if needed
+  }
+
+  
+});
+
+document.addEventListener('keyup', (event) => {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    ball.stopMovement();
   }
 });
 
-for (let i = 0; i < 10; i++) {
-  surfacePool.push(createSurfaceEntity(scene, world, i));
-}
 
+for (let i = 0; i < 10; i++) {
+  surfacePool.push(createSurfaceEntity(scene, world, surfacePool[i - 1], 8));
+}
 
 
 // Start the animation loop

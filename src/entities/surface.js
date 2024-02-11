@@ -13,7 +13,7 @@ class SurfaceMesh extends THREE.Mesh {
         new THREE.MeshPhongMaterial({ color: color })
     )
     this.width = width;
-    this.length = height;
+    this.height = height;
     this.color = color;
     this.depth = depth;
   }
@@ -36,23 +36,33 @@ class CannonSurface extends Body {
     }
 }
 
+export class Obstacle {
+  constructor({width = 1, height = 1, depth = 1, color, mass}) {
+    this.meshSurface = new SurfaceMesh({width, height, color, depth});
+    this.cannonSurface = new CannonSurface({width, height, depth, mass});
+  }
+}
+
 export class SurfaceEntity {
-    constructor({width, height, depth, color, mass}) {
+    constructor({width = 8, height = 1, depth = 20, color, mass}) {
         this.meshSurface = new SurfaceMesh({width, height, color, depth});
         this.cannonSurface = new CannonSurface({width, height, depth, mass})
     }
     move(speed) {
         const newZPosition = this.cannonSurface.position.z + speed;
-        this.meshSurface.position.set(0, 0, newZPosition);
-        this.cannonSurface.position.set(0, 0, newZPosition);
+        this.meshSurface.position.set(this.cannonSurface.position.x, 0, newZPosition);
+        this.cannonSurface.position.set(this.cannonSurface.position.x, 0, newZPosition);
     };
 
-    initialPosition(zPosition) {
-        console.log('from surface class', zPosition)
-        this.meshSurface.setPosition(0, 0, zPosition);
-        this.cannonSurface.position.set(0, 0, zPosition);
-    }
+    initialPosition(x, y, z) {
+        this.meshSurface.setPosition(x, y, z);
+        this.cannonSurface.position.set(x, y, z);
+    };
+
+   
 }
+
+
 
 
 

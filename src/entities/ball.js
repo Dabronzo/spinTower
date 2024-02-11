@@ -30,17 +30,34 @@ export class Ball {
         this.meshShpere = new BallMesh({radius, color});
         this.cannonSphere = new CannonBall({radius, mass});
         this.jumpForce = new Vec3(0, 5, 0);
+        this.dodgeSpeed = 2;
     }
 
     isGrounded() {
         return this.cannonSphere.collisionResponse;
-    }
+    };
  
 
     jump() {
         console.log('jumping')
         this.cannonSphere.applyImpulse(this.jumpForce, this.cannonSphere.position);
+    };
+
+    setVelocity(direction) {
+        const currentVelocity = this.cannonSphere.velocity;
+        this.cannonSphere.velocity.set(this.dodgeSpeed * direction, currentVelocity.y, currentVelocity.z);
+    };
+
+    stopMovement() {
+        this.cannonSphere.velocity.set(0, 0, 0);
     }
 
+    moveRight() {
+        this.setVelocity(1);
+    };
+
+    moveLeft() {
+        this.setVelocity(-1);
+    }
 
 }
