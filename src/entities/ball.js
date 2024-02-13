@@ -1,10 +1,10 @@
 import { Body, Sphere, Vec3 } from 'cannon';
-import { SphereGeometry, Mesh, MeshPhongMaterial } from 'three';
+import { SphereGeometry, Mesh, MeshPhongMaterial, BoxGeometry } from 'three';
 
 class BallMesh extends Mesh {
     constructor({radius, color}) {
         super(
-            new SphereGeometry(radius, 32, 32),
+            new BoxGeometry(radius, 32, 32),
             new MeshPhongMaterial({color: color})
         )
         this.radius = radius;
@@ -31,16 +31,13 @@ export class Ball {
         this.cannonSphere = new CannonBall({radius, mass});
         this.jumpForce = new Vec3(0, 5, 0);
         this.dodgeSpeed = 2;
-    }
-
-    isGrounded() {
-        return this.cannonSphere.collisionResponse;
     };
- 
 
     jump() {
-        console.log('jumping')
-        this.cannonSphere.applyImpulse(this.jumpForce, this.cannonSphere.position);
+        if (this.cannonSphere.collisionResponse) {
+            this.cannonSphere.applyImpulse(this.jumpForce, this.cannonSphere.position);
+        }
+       
     };
 
     setVelocity(direction) {
@@ -49,6 +46,7 @@ export class Ball {
     };
 
     stopMovement() {
+        const currentVelocity = this.cannonSphere.velocity;
         this.cannonSphere.velocity.set(0, 0, 0);
     }
 
@@ -58,6 +56,10 @@ export class Ball {
 
     moveLeft() {
         this.setVelocity(-1);
-    }
+    };
+
+    moveForward() {
+        this.cannonSphere.velocity.set(0, 0, -this.dodgeSpeed);
+    };
 
 }

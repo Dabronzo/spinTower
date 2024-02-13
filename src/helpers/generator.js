@@ -8,14 +8,12 @@ export function createSurfaceEntity(scene, world, prevSurface, surfaceWidth) {
  
     if (prevSurface && prevSurface.meshSurface) {
         surface = new SurfaceEntity({
-            width:  surfaceWidth || Math.floor(Math.random() * 8) + 1,
+            width:  surfaceWidth,
             color: '#ADD8E6',
             mass: null,
         });
-       
-
+        
         surface.initialPosition(0, 0, prevSurface.meshSurface.position.z - 20);
-        console.log('creating', prevSurface.meshSurface.position.z)
     } else  {
         surface = new SurfaceEntity({
             color: '#ADD8E6',
@@ -24,26 +22,20 @@ export function createSurfaceEntity(scene, world, prevSurface, surfaceWidth) {
         });
     }
     
-    scene.add(surface.meshSurface);
+    // scene.add(surface.meshSurface);
     world.addBody(surface.cannonSurface);
 
    
     return surface;
 }
 
-export function recycleSurfaceEntity(surfaceEntity, zPosition) {
-    if (surfaceEntity) {
+export function recycleSurfaceEntity(surfaceEntity, zPosition, wMode) {
+    if (!surfaceEntity) return;
+    if (wMode) {
+        const xPosition = Math.floor(Math.random() * (3 - (-3)) - 3);
+        surfaceEntity.initialPosition(xPosition, 0, zPosition);
+    } else {
         surfaceEntity.initialPosition(0, 0, zPosition);
     }
-}
-
-export function createObstacle(numberOfObs) {
-    for (obs of numberOfObs) {
-      const obstacle = new Obstacle({color: '#FFD580'})
-      const randomX =  Math.floor(Math.random() * (3 - (-3) + 1)) + min;
-      obstacle.meshSurface.position.set(randomX, 0, 0);
-      obstacle.cannonSurface.position.set();
-    }
-
-  }
+};
 
