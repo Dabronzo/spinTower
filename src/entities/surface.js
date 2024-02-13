@@ -73,23 +73,25 @@ export class SurfaceEntity {
     //   return this.obstacles;
     // }
 
-    spawObstacles() {
+    spawObstacles(total) {
       // clear the obstacles array
       this.obstacles.splice(0, this.obstacles.length);
-    
-      // find their position
-      const zPosition = this.meshSurface.position.z;
+      for (let i=0; i < total; i++) {
+      
+        // find their position
+        const zPosition = this.meshSurface.position.z;
     
       // Set the obstacles to spawn on the top of the surface (height of the surface)
-      const yPosition = this.meshSurface.height;
+         const yPosition = this.meshSurface.height;
     
       // Randomly determine the x position within the surface width
-      const xPosition = Math.random() * this.meshSurface.width - this.meshSurface.width / 2;
+        const xPosition = Math.random() * this.meshSurface.width - this.meshSurface.width / 2;
     
-      const obs = new ObstacleEntity({width: 1, height: 1, depth: 1, color: '#CBC3E3', mass: 1});
-      obs.meshSurface.position.set(xPosition, yPosition, zPosition);
-      obs.cannonSurface.position.set(xPosition, yPosition, zPosition);
+        const obs = new ObstacleEntity({width: 1, height: 1, depth: 1, color: '#CBC3E3', mass: 1});
+        obs.meshSurface.position.set(xPosition, yPosition, zPosition);
+        obs.cannonSurface.position.set(xPosition, yPosition, zPosition);
       this.obstacles.push(obs);
+      }
       return this.obstacles;
     };
 
@@ -103,12 +105,26 @@ export class ObstacleEntity {
   constructor({width, height, depth, color, mass}) {
     this.meshSurface = new SurfaceMesh({width, height, color, depth});
     this.cannonSurface = new CannonSurface({width, height, depth, mass});
+    this.collideSurface = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
   };
 
   moveObs(speed){
     const newZPosition = this.cannonSurface.position.z + speed;
     this.meshSurface.position.set(this.cannonSurface.position.x, 1, newZPosition);
     this.cannonSurface.position.set(this.cannonSurface.position.x, 1, newZPosition);
+  }
+
+  updateCollider() {
+    const boundingBox = this.collideSurface.setFromObject(this.meshSurface);
+    this.collideSurface.copy(boundingBox);
+  }
+
+  checkCollider(ball) {
+    if (ball.collideSurface.intersectsBox(this.collideSurface)) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
 }

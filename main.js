@@ -7,6 +7,7 @@ import { SurfaceEntity } from './src/entities/surface';
 import { createSurfaceEntity, recycleSurfaceEntity } from './src/helpers/generator';
 import { ScoreDisplay } from './src/display/score';
 import CannonDebugger from 'cannon-es-debugger';
+import { PowerUp } from './src/entities/powerUp';
 
 // Set up the scene
 const scene = new THREE.Scene();
@@ -25,7 +26,12 @@ document.body.appendChild(renderer.domElement);
 
 //stage logic
 const surfacePool = [];
-const obstaclePool = [];
+const powerUpsPool = [];
+let obstacles;
+let powerUpActive = false;
+let elapsedTime = 0;
+
+
 
 
 // displays
@@ -62,26 +68,19 @@ const timeStep = 1 / 60;
 const ball = new Ball({
   radius: 0.5,
   color: '#90EE90',
-  mass: 3,
+  mass: 1,
 })
 ball.meshShpere.position.y = 3;
 ball.cannonSphere.position.y = 3;
 
+ball.setCollide(ball.meshShpere.position, ball.radius);
+
 // scene.add(surface.meshSurface);
 // scene.add(ball.meshShpere)
-// world.addBody(surface.cannonSurface);
 world.addBody(ball.cannonSphere);
 
 const cannonDebugger = new CannonDebugger(scene, world, {})
 
-
-// const surface = new SurfaceMesh({width: 6, height: 1, color: '#ADD8E6', depth: 10});
-// surface.setPosition(0, 0, -1);
-// surface.receiveShadow = true;
-// scene.add(surface);
-// const ball = new Ball({radius: 0.5, color: '#90EE90'});
-// ball.setInitialPosition(0, 2, 0);
-// ball.castShadow = true;
 
 
 window.addEventListener('resize', () => {
@@ -94,62 +93,125 @@ window.addEventListener('resize', () => {
  renderer.setSize(newWidth, newHeight);
 });
 
-const controls = new OrbitControls(camera, renderer.domElement)
-const surfaceMovementSpeed = 0.04;
 
+
+const controls = new OrbitControls(camera, renderer.domElement)
+let speed = 0.2
+
+// functions
+
+function spawnPowerUp(x, y, z) {
+  const powerUp = new PowerUp();
+  powerUp.meshPowerUp.position.set(x, y, z);
+  powerUp.setCollide(powerUp.meshPowerUp.position, 1);
+  return powerUp;
+}
 // Animation function
 const animate = () => {
   requestAnimationFrame(animate);
   world.step(timeStep);
   cannonDebugger.update();
-  const speed = 0.06
+  elapsedTime += timeStep;
+
+  
+ 
 
 
   // Update positions based on Cannon.js bodies
-  // surface.meshSurface.position.copy(surface.cannonSurface.position);
-  // surface.meshSurface.quaternion.copy(surface.cannonSurface.quaternion);
   ball.meshShpere.position.copy(ball.cannonSphere.position);
   ball.meshShpere.quaternion.copy(ball.cannonSphere.quaternion);
+  ball.updateCollide();
+
+  if (powerUpActive) {
+
+    surfacePool.forEach((surface) => {
+      surface.getObstacles().forEach((o) => {
+        world.remove(o.cannonSurface);
+      })
+    })
+   
+  } else  {
+    surfacePool.forEach((surface) => {
+      surface.getObstacles().forEach((o) => {
+        world.addBody(o.cannonSurface);
+      })
+    })
+  }
+
+  // ball.collideSphere.copy(ball.meshShpere.geometry.boundingBox).applyMatrix4(ball.meshShpere.matrixWorld);
   surfacePool.forEach((surface, index) => {
     surface.move(speed);
 
     
+ 
 
-
-    const newZPosition = surface.meshSurface.depth;
     // Check if the surface is no longer visible
+    // recycle then and add obstacles and powerups
     if (surface.meshSurface.position.z >= 20) {
       // removing existing obstacles
-      // surface.getObstacles().forEach((o, i) => {
-      //   world.remove(o.cannonSurface);
-      //   scene.remove(o.meshSurface);
-      // })
-      // Remove from the scene and world
-      // scene.remove(surface.meshSurface);
-      // world.remove(surface.cannonSurface);
-      // Create a new surface entity and add it to the pool
-      // const prevSurface = surfacePool[9];
+      surface.getObstacles().forEach((o, i) => {
+        world.remove(o.cannonSurface);
+        scene.remove(o.meshSurface);
+      })
+
       recycleSurfaceEntity(surfacePool[index], -180, true);
-      // const obs = surfacePool[index].spawObstacles();
-      // obs.forEach((o) => {
-      //   scene.add(o.meshSurface);
-      //   world.addBody(o.cannonSurface);
-      // })
+      // adding obstacles
+      obstacles = surfacePool[index].spawObstacles(1);
+      obstacles.forEach((obs) => {
+        scene.add(obs.meshSurface);
+        world.addBody(obs.cannonSurface);
+      })
+
+      // adding power Ups
+      
+     
       scoreDisplay.incrementScore();
+    };
+    console.log(elapsedTime)
+
+    if (elapsedTime >= 20) {
+      const xPosition = Math.random() * surface.meshSurface.width - surface.meshSurface.width / 2;
+      const powerUp = spawnPowerUp(xPosition, 2, -180);
+ 
+      scene.add(powerUp.meshPowerUp);
+      powerUpsPool.push(powerUp);
+     
+      elapsedTime = 0; // Reset elapsed time
     }
 
-    // surface.getObstacles().forEach((obs, i) => {
-    //   obs.moveObs(speed);
-    //   obs.meshSurface.position.copy(obs.cannonSurface.position);
-    //   obs.meshSurface.quaternion.copy(obs.cannonSurface.quaternion);
-    // })
+    surface.getObstacles().forEach((obs, i) => {
+      obs.moveObs(speed);
+      obs.meshSurface.position.copy(obs.cannonSurface.position);
+      obs.meshSurface.quaternion.copy(obs.cannonSurface.quaternion);
+      obs.updateCollider();
+      ball.chechCollision(obs);
+     
+    })
+
+    powerUpsPool.forEach((pU, i) => {
+      pU.move(speed);
+      pU.rotate(0.008);
+
+      if (!powerUpActive && pU.checkCollision(ball)) {
+        powerUpActive = true;
+        speed = 0.5;
+        setTimeout(() => {
+          speed = 0.2;
+          powerUpActive = false;
+        }, 5000);
+      }
+      pU.updateCollide();
+      if (pU.meshPowerUp.position.z >=22) {
+        scene.remove(pU.meshPowerUp);
+        powerUpsPool.shift();
+      }
+    })
+   
+
 
   });
 
   //
-
-
-
 
   // Render the scene
   renderer.render(scene, camera);

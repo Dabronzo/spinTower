@@ -1,11 +1,11 @@
-import { Body, Sphere, Vec3 } from 'cannon';
-import { SphereGeometry, Mesh, MeshPhongMaterial, BoxGeometry } from 'three';
+import * as CANNON from 'cannon';
+import * as THREE from 'three';
 
-class BallMesh extends Mesh {
+class BallMesh extends THREE.Mesh {
     constructor({radius, color}) {
         super(
-            new BoxGeometry(radius, 32, 32),
-            new MeshPhongMaterial({color: color})
+            new THREE.SphereGeometry(radius, 32, 32),
+            new THREE.MeshPhongMaterial({color: color})
         )
         this.radius = radius;
         this.color = color;
@@ -13,13 +13,13 @@ class BallMesh extends Mesh {
 
 }
 
-class CannonBall extends Body {
+class CannonBall extends CANNON.Body {
     constructor({radius, mass}) {
         super({mass});
 
         // for some reason cannon double the dimentions so here is why everythins
         // is being divided by 2
-        const shape = new Sphere(radius);
+        const shape = new CANNON.Sphere(radius);
         this.addShape(shape);
     }
 };
@@ -29,9 +29,30 @@ export class Ball {
     constructor({radius, color, mass}) {
         this.meshShpere = new BallMesh({radius, color});
         this.cannonSphere = new CannonBall({radius, mass});
-        this.jumpForce = new Vec3(0, 5, 0);
+        this.collideSphere = new THREE.Sphere(new THREE.Vector3(), new THREE.Vector3());
+        this.jumpForce = new CANNON.Vec3(0, 5, 0);
         this.dodgeSpeed = 2;
     };
+
+    setCollide(position, radius) {
+        this.collideSphere.setFromPoints(position, radius);
+    }
+
+    chechCollision(other) {
+        if (!other) return;
+        if (other.collideSurface.intersectsSphere(this.collideSphere)) {
+            // console.log('binba');
+        }       
+    }
+
+    updateCollide() {
+        const position = this.meshShpere.position.clone();
+        const radius = this.meshShpere.geometry.parameters.radius;
+
+        // Set the position and radius of the collideSphere
+        this.collideSphere.center.copy(position);
+        this.collideSphere.radius = radius;
+    }
 
     jump() {
         if (this.cannonSphere.collisionResponse) {

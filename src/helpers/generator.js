@@ -1,3 +1,4 @@
+import { PowerUp } from "../entities/powerUp";
 import { SurfaceEntity } from "../entities/surface";
 
 
@@ -31,11 +32,6 @@ export function createSurfaceEntity(scene, world, prevSurface, surfaceWidth) {
 
 export function recycleSurfaceEntity(surfaceEntity, zPosition, wMode) {
     if (!surfaceEntity) return;
-    if (wMode) {
-        const xPosition = Math.floor(Math.random() * (3 - (-3)) - 3);
-        surfaceEntity.initialPosition(xPosition, 0, zPosition);
-    } else {
-        surfaceEntity.initialPosition(0, 0, zPosition);
-    }
+    surfaceEntity.initialPosition(0, 0, zPosition);
 };
 
