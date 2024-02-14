@@ -8,17 +8,19 @@ import { Body, Box, Vec3 } from 'cannon';
  * takes widith, leght and color as agruments.
  */
 class SurfaceMesh extends THREE.Mesh {
-  constructor({width, height, color, depth}) {
+  constructor({width, height, map, depth}) {
+    
     super(
         new THREE.BoxGeometry(width, height, depth),
-        new THREE.MeshPhongMaterial({color, transparent: true})
+        new THREE.MeshStandardMaterial({map, transparent: true})
     )
     this.width = width;
     this.height = height;
-    this.color = color;
     this.depth = depth;
+    this.map = map;
     this.receiveShadow = true;
   }
+  
 
   setPosition(x, y, z) {
     this.position.set(x, y, z)
@@ -30,7 +32,7 @@ class SurfaceMesh extends THREE.Mesh {
 
 class TreadmillMesh extends THREE.Mesh {
   constructor({width, height, depth, map}) {
-    console.log('heheeh', map)
+
     super(
         new THREE.BoxGeometry(width, height, depth),
         new THREE.MeshStandardMaterial({ map })
@@ -65,7 +67,7 @@ export class SurfaceEntity {
         this.meshSurface = new TreadmillMesh({width, height, depth, map: textureMap});
         this.cannonSurface = new CannonSurface({width, height, depth, mass})
         this.obstacles = [];
-        console.log(this.meshSurface.material)
+
     }
     move(speed) {
         const newZPosition = this.cannonSurface.position.z + speed;
@@ -84,7 +86,7 @@ export class SurfaceEntity {
     }
 
 
-    spawObstacles(total) {
+    spawObstacles(total, map) {
       // clear the obstacles array
       this.obstacles.splice(0, this.obstacles.length);
       for (let i=0; i < total; i++) {
@@ -97,8 +99,7 @@ export class SurfaceEntity {
     
       // Randomly determine the x position within the surface width
         const xPosition = Math.random() * this.meshSurface.width - this.meshSurface.width / 2;
-    
-        const obs = new ObstacleEntity({width: 1, height: 1, depth: 1, color: '#CBC3E3', mass: 1});
+        const obs = new ObstacleEntity({width: 1, height: 1, depth: 1, map, mass: 1});
         obs.meshSurface.position.set(xPosition, yPosition, zPosition);
         obs.cannonSurface.position.set(xPosition, yPosition, zPosition);
       this.obstacles.push(obs);
@@ -113,8 +114,8 @@ export class SurfaceEntity {
 
 
 export class ObstacleEntity {
-  constructor({width, height, depth, color, mass}) {
-    this.meshSurface = new SurfaceMesh({width, height, color, depth});
+  constructor({width, height, depth, map, mass}) {
+    this.meshSurface = new SurfaceMesh({width, height, map, depth});
     this.cannonSurface = new CannonSurface({width, height, depth, mass});
     this.collideSurface = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
     this.exploded = false;
@@ -162,6 +163,16 @@ export class ObstacleEntity {
     }
 
     
+  };
+
+  setTexture(newTexture) {
+    if (!(newTexture instanceof THREE.Texture)) {
+      console.error('Invalid texture provided.');
+      return;
+    }
+    // update material
+    this.meshSurface.material.map = newTexture;
+    this.meshSurface.material.needsUpdate = true;
   }
 
 }

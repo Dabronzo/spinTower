@@ -6,8 +6,6 @@ const colorArr = ['#ADD8E6', '#C4A484', '#FFD580', '#CBC3E3']
 
 export function createSurfaceEntity(scene, world, prevSurface, map) {
     let surface;
-    console.log('hahshda', map)
- 
     if (prevSurface && prevSurface.meshSurface) {
         surface = new SurfaceEntity({
             textureMap: map,

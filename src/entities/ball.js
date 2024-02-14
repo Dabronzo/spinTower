@@ -2,14 +2,14 @@ import * as CANNON from 'cannon';
 import * as THREE from 'three';
 
 class BallMesh extends THREE.Mesh {
-    constructor({radius, color}) {
+    constructor({radius, map}) {
         super(
             new THREE.SphereGeometry(radius, 32, 32),
-            new THREE.MeshPhongMaterial({color: color})
+            new THREE.MeshStandardMaterial({map})
         )
         this.radius = radius;
-        this.color = color;
         this.castShadow = true;
+        this.map = map;
     }
 
 }
@@ -27,8 +27,8 @@ class CannonBall extends CANNON.Body {
 
 export class Ball {
     isGrounded = false
-    constructor({radius, color, mass}) {
-        this.meshShpere = new BallMesh({radius, color});
+    constructor({radius, map, mass}) {
+        this.meshShpere = new BallMesh({radius, map});
         this.cannonSphere = new CannonBall({radius, mass});
         this.collideSphere = new THREE.Sphere(new THREE.Vector3(), new THREE.Vector3());
         this.jumpForce = new CANNON.Vec3(0, 5, 0);
@@ -83,5 +83,6 @@ export class Ball {
     moveForward() {
         this.cannonSphere.velocity.set(0, 0, -this.dodgeSpeed);
     };
+    
 
 }

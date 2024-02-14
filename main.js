@@ -42,6 +42,11 @@ const skybox = new THREE.Mesh(skyboxGeometry, skyBoxMaterial);
 // surface
 const surfaceMap =[ textureLoader.load('./assets/textures/treadmill.jpg')]
 
+// ball
+const ballMap = [textureLoader.load('./assets/textures/beachball.jpg')];
+// boxes
+const obstacleMapRed = textureLoader.load('./assets/textures/redWood.jpg');
+const obstacleMapGreen = textureLoader.load('./assets/textures/greenWodd.jpg');
 
 
 
@@ -107,11 +112,12 @@ const timeStep = 1 / 60;
 
 const ball = new Ball({
   radius: 0.5,
-  color: '#90EE90',
+  map: ballMap[0],
   mass: 1,
 })
 ball.meshShpere.position.y = 3;
 ball.cannonSphere.position.y = 3;
+
 
 ball.setCollide(ball.meshShpere.position, ball.radius);
 
@@ -152,7 +158,6 @@ function spawnPowerUp(x, y, z) {
 // Animation function
 const animate = () => {
   requestAnimationFrame(animate);
-
   world.step(timeStep);
   TWEEN.update();
   // composer.render();
@@ -163,10 +168,6 @@ const animate = () => {
 
 
   }
-
-
- 
-
 
   // Update positions based on Cannon.js bodies
   ball.meshShpere.position.copy(ball.cannonSphere.position);
@@ -180,6 +181,7 @@ const animate = () => {
 
     surfacePool.forEach((surface) => {
       surface.getObstacles().forEach((o) => {
+        o.setTexture(obstacleMapGreen)
         world.remove(o.cannonSurface);
       })
     })
@@ -187,6 +189,7 @@ const animate = () => {
   } else  {
     surfacePool.forEach((surface) => {
       surface.getObstacles().forEach((o) => {
+        o.setTexture(obstacleMapRed)
         world.addBody(o.cannonSurface);
       })
     })
@@ -212,15 +215,12 @@ const animate = () => {
 
       recycleSurfaceEntity(surfacePool[index], -180, true);
       // adding obstacles
-      obstacles = surfacePool[index].spawObstacles(1);
+      console.log(obstacleMapRed)
+      obstacles = surfacePool[index].spawObstacles(1, obstacleMapRed);
       obstacles.forEach((obs) => {
         scene.add(obs.meshSurface);
         world.addBody(obs.cannonSurface);
-      })
-
-      
-     
-      ;
+      });
     };
 
     
