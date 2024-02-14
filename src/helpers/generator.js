@@ -4,7 +4,7 @@ import { SurfaceEntity } from "../entities/surface";
 
 const colorArr = ['#ADD8E6', '#C4A484', '#FFD580', '#CBC3E3']
 
-export function createSurfaceEntity(scene, world, prevSurface, surfaceWidth) {
+export function createSurfaceEntity(scene, world, prevSurface, surfaceWidth, speed) {
     let surface;
  
     if (prevSurface && prevSurface.meshSurface) {
@@ -12,6 +12,7 @@ export function createSurfaceEntity(scene, world, prevSurface, surfaceWidth) {
             width:  surfaceWidth,
             color: '#ADD8E6',
             mass: null,
+            speed: speed,
         });
         
         surface.initialPosition(0, 0, prevSurface.meshSurface.position.z - 20);
@@ -20,10 +21,11 @@ export function createSurfaceEntity(scene, world, prevSurface, surfaceWidth) {
             color: '#ADD8E6',
             width:  surfaceWidth,
             mass: null,
+            speed: speed,
         });
     }
     
-    // scene.add(surface.meshSurface);
+    scene.add(surface.meshSurface);
     world.addBody(surface.cannonSurface);
 
    

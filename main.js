@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon';
+import * as TWEEN from '@tweenjs/tween.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Ball } from './src/entities/ball';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
@@ -8,6 +9,7 @@ import { createSurfaceEntity, recycleSurfaceEntity } from './src/helpers/generat
 import { ScoreDisplay } from './src/display/score';
 import CannonDebugger from 'cannon-es-debugger';
 import { PowerUp } from './src/entities/powerUp';
+
 
 // Set up the scene
 const scene = new THREE.Scene();
@@ -54,14 +56,6 @@ const world = new CANNON.World();
 world.gravity.set(0, -9.8, 0); // Adjust gravity as needed
 const timeStep = 1 / 60;
 
-// adding the stuff
-// const surface = new SurfaceEntity({
-//   width: 6,
-//   height: 1,
-//   depth: 20,
-//   color: '#ADD8E6',
-//   mass: null,
-// });
 
 
 
@@ -95,6 +89,7 @@ window.addEventListener('resize', () => {
 
 
 
+
 const controls = new OrbitControls(camera, renderer.domElement)
 let speed = 0.2
 
@@ -106,14 +101,16 @@ function spawnPowerUp(x, y, z) {
   powerUp.setCollide(powerUp.meshPowerUp.position, 1);
   return powerUp;
 }
+
 // Animation function
 const animate = () => {
   requestAnimationFrame(animate);
   world.step(timeStep);
+  TWEEN.update();
   cannonDebugger.update();
   elapsedTime += timeStep;
 
-  
+
  
 
 
@@ -141,6 +138,7 @@ const animate = () => {
   // ball.collideSphere.copy(ball.meshShpere.geometry.boundingBox).applyMatrix4(ball.meshShpere.matrixWorld);
   surfacePool.forEach((surface, index) => {
     surface.move(speed);
+    
 
     
  
@@ -152,6 +150,7 @@ const animate = () => {
       surface.getObstacles().forEach((o, i) => {
         world.remove(o.cannonSurface);
         scene.remove(o.meshSurface);
+        scoreDisplay.incrementScore(5)
       })
 
       recycleSurfaceEntity(surfacePool[index], -180, true);
@@ -162,16 +161,16 @@ const animate = () => {
         world.addBody(obs.cannonSurface);
       })
 
-      // adding power Ups
       
      
-      scoreDisplay.incrementScore();
+      ;
     };
-    console.log(elapsedTime)
 
+    
+    // adding powerups
     if (elapsedTime >= 20) {
       const xPosition = Math.random() * surface.meshSurface.width - surface.meshSurface.width / 2;
-      const powerUp = spawnPowerUp(xPosition, 2, -180);
+      const powerUp = spawnPowerUp(xPosition, 1, -180);
  
       scene.add(powerUp.meshPowerUp);
       powerUpsPool.push(powerUp);
@@ -179,22 +178,30 @@ const animate = () => {
       elapsedTime = 0; // Reset elapsed time
     }
 
+   //  obstacles animation
     surface.getObstacles().forEach((obs, i) => {
       obs.moveObs(speed);
+
       obs.meshSurface.position.copy(obs.cannonSurface.position);
       obs.meshSurface.quaternion.copy(obs.cannonSurface.quaternion);
       obs.updateCollider();
+      if (obs.checkCollider(ball) && powerUpActive) {
+        obs.setColision();
+        scoreDisplay.incrementScore(1)
+      }
       ball.chechCollision(obs);
      
     })
 
+    // powerups animation
     powerUpsPool.forEach((pU, i) => {
       pU.move(speed);
       pU.rotate(0.008);
 
       if (!powerUpActive && pU.checkCollision(ball)) {
         powerUpActive = true;
-        speed = 0.5;
+        speed = 0.2;
+        pU.triggerCollision();
         setTimeout(() => {
           speed = 0.2;
           powerUpActive = false;

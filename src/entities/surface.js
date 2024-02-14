@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as TWEEN from '@tweenjs/tween.js';
 import { Body, Box, Vec3 } from 'cannon';
 
 /**
@@ -10,7 +11,7 @@ class SurfaceMesh extends THREE.Mesh {
   constructor({width, height, color, depth}) {
     super(
         new THREE.BoxGeometry(width, height, depth),
-        new THREE.MeshPhongMaterial({ color: color })
+        new THREE.MeshPhongMaterial({ color: color, transparent: true })
     )
     this.width = width;
     this.height = height;
@@ -21,6 +22,8 @@ class SurfaceMesh extends THREE.Mesh {
   setPosition(x, y, z) {
     this.position.set(x, y, z)
   }
+
+ 
   // Methods will be here
 }
 
@@ -59,19 +62,6 @@ export class SurfaceEntity {
       this.cannonSurface.width = width;
     }
 
-    // spawObstacles() {
-    //   // clear the obstacles array
-    //   this.obstacles.splice(0, this.obstacles.length);
-
-    //   // find their position
-    //   const zPosition = this.meshSurface.position.z;
-    //   const xPosition = Math.floor(Math.random() * (3 - (-3)) - 3);
-    //   const obs = new ObstacleEntity({width: 1, height: 1, depth: 1, color: '#CBC3E3', mass: 1});
-    //   obs.meshSurface.position.set(xPosition, 1, zPosition);
-    //   obs.cannonSurface.position.set(xPosition, 1, zPosition);
-    //   this.obstacles.push(obs);
-    //   return this.obstacles;
-    // }
 
     spawObstacles(total) {
       // clear the obstacles array
@@ -106,12 +96,14 @@ export class ObstacleEntity {
     this.meshSurface = new SurfaceMesh({width, height, color, depth});
     this.cannonSurface = new CannonSurface({width, height, depth, mass});
     this.collideSurface = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+    this.exploded = false;
+    this.isCollisionDetected = false;
   };
 
   moveObs(speed){
-    const newZPosition = this.cannonSurface.position.z + speed;
-    this.meshSurface.position.set(this.cannonSurface.position.x, 1, newZPosition);
-    this.cannonSurface.position.set(this.cannonSurface.position.x, 1, newZPosition);
+      const newZPosition = this.cannonSurface.position.z + speed;
+      this.cannonSurface.position.set(this.cannonSurface.position.x, 1, newZPosition);  
+      this.meshSurface.position.set(this.cannonSurface.position.x, 1, newZPosition);
   }
 
   updateCollider() {
@@ -120,11 +112,35 @@ export class ObstacleEntity {
   }
 
   checkCollider(ball) {
-    if (ball.collideSurface.intersectsBox(this.collideSurface)) {
+    if (!ball) return;
+    if (ball.collideSphere.intersectsBox(this.collideSurface)) {
       return true;
     } else {
       return false;
     }
+  }
+
+  setColision() {
+ 
+    if (!this.exploded) {
+      // Set up initial states
+     
+      const initialScale = { x: this.meshSurface.scale.x, y: this.meshSurface.scale.y, z: this.meshSurface.scale.z };
+      // Define the target states
+      const targetScale = { x: 5 * initialScale.x, y: 5 * initialScale.y, z: 5 * initialScale.z };
+
+      // Create a new Tween
+      const scaleTween = new TWEEN.Tween(initialScale).to(targetScale, 500).onUpdate((scale) => {
+        this.meshSurface.scale.set(scale.x, scale.y, scale.z);
+        
+      });
+      this.meshSurface.material.setValues({opacity: 0.2});
+      
+      scaleTween.start();
+      this.exploded = true;
+    }
+
+    
   }
 
 }
