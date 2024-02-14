@@ -3,7 +3,7 @@ import * as CANNON from 'cannon';
 import * as TWEEN from '@tweenjs/tween.js';
 import { Ball } from './src/entities/ball';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { createSurfaceEntity, recycleSurfaceEntity, spawnPowerUp } from './src/helpers/generator';
+import { createSurfaceEntity, handleTouchMove, handleTouchEnd, recycleSurfaceEntity, spawnPowerUp } from './src/helpers/generator';
 import { DarkLayer, GameOverUI, PlayButton, ScoreDisplay } from './src/display/score';
 import CannonDebugger from 'cannon-es-debugger';
 import { Skybox } from './src/entities/skybox';
@@ -107,7 +107,8 @@ scene.add(ball.meshShpere)
 world.addBody(ball.cannonSphere);
 
 // debug
-const controls = new OrbitControls(camera, renderer.domElement)
+// const controls = new OrbitControls(camera, renderer.domElement)
+
 
 
 
@@ -284,17 +285,21 @@ for (let i = 0; i < 10; i++) {
 
 // moblie
 
+let touchStartX = 0;
+let touchEndX = 0;
+
 document.addEventListener('touchstart', (event) => {
   touchStartX = event.touches[0].clientX;
+  handleTouchMove(ball, touchEndX, touchStartX)
 });
 
 document.addEventListener('touchmove', (event) => {
   touchEndX = event.touches[0].clientX;
-  handleTouchMove(ball);
+  handleTouchMove(ball, touchEndX, touchStartX);
 });
 
 document.addEventListener('touchend', () => {
-  handleTouchEnd(ball);
+  handleTouchEnd(ball, touchEndX, touchStartX);
 });
 
 

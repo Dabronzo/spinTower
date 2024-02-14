@@ -45,7 +45,7 @@ export function spawnPowerUp(x, y, z) {
 }
 
 
-export  function handleTouchMove(ball) {
+export  function handleTouchMove(ball, touchEndX, touchStartX) {
     const swipeThreshold = 50; // Adjust the threshold based on your preference
   
     const swipeDistance = touchEndX - touchStartX;
