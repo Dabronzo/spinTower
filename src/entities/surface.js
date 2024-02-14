@@ -11,12 +11,13 @@ class SurfaceMesh extends THREE.Mesh {
   constructor({width, height, color, depth}) {
     super(
         new THREE.BoxGeometry(width, height, depth),
-        new THREE.MeshPhongMaterial({ color: color, transparent: true })
+        new THREE.MeshPhongMaterial({color, transparent: true})
     )
     this.width = width;
     this.height = height;
     this.color = color;
     this.depth = depth;
+    this.receiveShadow = true;
   }
 
   setPosition(x, y, z) {
@@ -25,6 +26,24 @@ class SurfaceMesh extends THREE.Mesh {
 
  
   // Methods will be here
+}
+
+class TreadmillMesh extends THREE.Mesh {
+  constructor({width, height, depth, map}) {
+    console.log('heheeh', map)
+    super(
+        new THREE.BoxGeometry(width, height, depth),
+        new THREE.MeshStandardMaterial({ map })
+    )
+    this.width = width;
+    this.height = height;
+    this.depth = depth;
+    this.map = map;
+    this.receiveShadow = true;
+  }
+  setPosition(x, y, z) {
+    this.position.set(x, y, z)
+  }
 }
 
 class CannonSurface extends Body {
@@ -41,10 +60,12 @@ class CannonSurface extends Body {
 
 
 export class SurfaceEntity {
-    constructor({width = 8, height = 1, depth = 20, color, mass}) {
-        this.meshSurface = new SurfaceMesh({width, height, color, depth});
+    constructor({width = 8, height = 1, depth = 20, textureMap, mass}) {
+
+        this.meshSurface = new TreadmillMesh({width, height, depth, map: textureMap});
         this.cannonSurface = new CannonSurface({width, height, depth, mass})
         this.obstacles = [];
+        console.log(this.meshSurface.material)
     }
     move(speed) {
         const newZPosition = this.cannonSurface.position.z + speed;

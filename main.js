@@ -9,12 +9,44 @@ import { createSurfaceEntity, recycleSurfaceEntity } from './src/helpers/generat
 import { ScoreDisplay } from './src/display/score';
 import CannonDebugger from 'cannon-es-debugger';
 import { PowerUp } from './src/entities/powerUp';
+//
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
+import { ColorCorrectionShader } from 'three/examples/jsm/shaders/ColorCorrectionShader.js';
+
+
+//loading textures
+
+const textureLoader = new THREE.TextureLoader();
+// skybox
+const skyBoxMaterial = []
+const skyboxTextures = [
+  textureLoader.load('./assets/skybox/bkg1_right.png'),
+  textureLoader.load('./assets/skybox/bkg1_left.png'),
+  textureLoader.load('./assets/skybox/bkg1_top.png'),
+  textureLoader.load('./assets/skybox/bkg1_bot.png'),
+  textureLoader.load('./assets/skybox/bkg1_front.png'),
+  textureLoader.load('./assets/skybox/bkg1_back.png'),
+];
+
+for (const texture of skyboxTextures) {
+  skyBoxMaterial.push(new THREE.MeshBasicMaterial({map: texture, side: THREE.BackSide}));
+};
+
+const skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
+
+const skybox = new THREE.Mesh(skyboxGeometry, skyBoxMaterial);
+
+// surface
+const surfaceMap =[ textureLoader.load('./assets/textures/treadmill.jpg')]
+
+
 
 
 // Set up the scene
 const scene = new THREE.Scene();
-
-const loader = new GLTFLoader();
 // Set up the camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 8;
@@ -32,6 +64,7 @@ const powerUpsPool = [];
 let obstacles;
 let powerUpActive = false;
 let elapsedTime = 0;
+let isplayerAlive = true;
 
 
 
@@ -46,9 +79,22 @@ light.castShadow = true;
 light.position.y = 5;
 scene.add(light);
 
+const ambientLight = new THREE.AmbientLight(0x404040); // Set the color as needed
+scene.add(ambientLight);
+
+
+
+
+
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
+
+// adding skybox
+
+
+
+scene.add(skybox);
 
 
 // Set up Cannon.js world
@@ -70,10 +116,10 @@ ball.cannonSphere.position.y = 3;
 ball.setCollide(ball.meshShpere.position, ball.radius);
 
 // scene.add(surface.meshSurface);
-// scene.add(ball.meshShpere)
+scene.add(ball.meshShpere)
 world.addBody(ball.cannonSphere);
 
-const cannonDebugger = new CannonDebugger(scene, world, {})
+// const cannonDebugger = new CannonDebugger(scene, world, {})
 
 
 
@@ -102,13 +148,21 @@ function spawnPowerUp(x, y, z) {
   return powerUp;
 }
 
+
 // Animation function
 const animate = () => {
   requestAnimationFrame(animate);
+
   world.step(timeStep);
   TWEEN.update();
-  cannonDebugger.update();
+  // composer.render();
+  // cannonDebugger.update();
   elapsedTime += timeStep;
+  if (!isplayerAlive) {
+    speed = 0.01;
+
+
+  }
 
 
  
@@ -118,6 +172,9 @@ const animate = () => {
   ball.meshShpere.position.copy(ball.cannonSphere.position);
   ball.meshShpere.quaternion.copy(ball.cannonSphere.quaternion);
   ball.updateCollide();
+  if (ball.meshShpere.position.y <= - 2 || ball.meshShpere.position.z >= 15) {
+    isplayerAlive = false;
+  }
 
   if (powerUpActive) {
 
@@ -250,7 +307,7 @@ document.addEventListener('keyup', (event) => {
 
 
 for (let i = 0; i < 10; i++) {
-  surfacePool.push(createSurfaceEntity(scene, world, surfacePool[i - 1]));
+  surfacePool.push(createSurfaceEntity(scene, world, surfacePool[i - 1], surfaceMap[0]));
 }
 
 

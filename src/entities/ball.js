@@ -9,6 +9,7 @@ class BallMesh extends THREE.Mesh {
         )
         this.radius = radius;
         this.color = color;
+        this.castShadow = true;
     }
 
 }

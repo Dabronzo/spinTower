@@ -23,7 +23,6 @@ class PowerUpMesh extends THREE.Mesh {
             roughness: 0.5, // Adjust as needed
             emissive: '#FDCB18', // Color for emissive glow
             emissiveIntensity: 1, // Intensity of the emissive glow
-            transparent: true,
           });
         model.traverse((child) => {
         if (child.isMesh) {
