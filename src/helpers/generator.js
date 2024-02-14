@@ -35,3 +35,30 @@ export function recycleSurfaceEntity(surfaceEntity, zPosition, wMode) {
     surfaceEntity.initialPosition(0, 0, zPosition);
 };
 
+
+
+export function spawnPowerUp(x, y, z) {
+    const powerUp = new PowerUp();
+    powerUp.meshPowerUp.position.set(x, y, z);
+    powerUp.setCollide(powerUp.meshPowerUp.position, 1);
+    return powerUp;
+}
+
+
+export  function handleTouchMove(ball) {
+    const swipeThreshold = 50; // Adjust the threshold based on your preference
+  
+    const swipeDistance = touchEndX - touchStartX;
+  
+    if (swipeDistance > swipeThreshold) {
+      // Right swipe
+      ball.moveRight();
+    } else if (swipeDistance < -swipeThreshold) {
+      // Left swipe
+      ball.moveLeft();
+    }
+}
+
+export function handleTouchEnd(ball) {
+    ball.stopMovement();
+  }

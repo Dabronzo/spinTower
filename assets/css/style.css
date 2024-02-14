@@ -1,0 +1,38 @@
+
+
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.gameOver {
+    position: absolute;
+    font-size: 150px;
+    z-index: 3;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: fade-in 3s;
+}
+
+.playAgain {
+    font-size: 1.5rem;
+    position: absolute;
+    background-color: lightcoral;
+    color: white;
+    border: none;
+    cursor: pointer;
+    top: 60%;
+    left: 50%;
+    width: '80px';
+    height: '80px';
+    z-index: 3;
+    border-radius: "8px";
+    transform: translate(-50%, -50%);
+}

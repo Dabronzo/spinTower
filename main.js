@@ -1,27 +1,20 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon';
 import * as TWEEN from '@tweenjs/tween.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Ball } from './src/entities/ball';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { SurfaceEntity } from './src/entities/surface';
-import { createSurfaceEntity, recycleSurfaceEntity } from './src/helpers/generator';
-import { ScoreDisplay } from './src/display/score';
+import { createSurfaceEntity, recycleSurfaceEntity, spawnPowerUp } from './src/helpers/generator';
+import { DarkLayer, GameOverUI, PlayButton, ScoreDisplay } from './src/display/score';
 import CannonDebugger from 'cannon-es-debugger';
-import { PowerUp } from './src/entities/powerUp';
-//
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
-import { ColorCorrectionShader } from 'three/examples/jsm/shaders/ColorCorrectionShader.js';
+import { Skybox } from './src/entities/skybox';
+
+
 
 
 //loading textures
 
 const textureLoader = new THREE.TextureLoader();
 // skybox
-const skyBoxMaterial = []
 const skyboxTextures = [
   textureLoader.load('./assets/skybox/bkg1_right.png'),
   textureLoader.load('./assets/skybox/bkg1_left.png'),
@@ -31,19 +24,13 @@ const skyboxTextures = [
   textureLoader.load('./assets/skybox/bkg1_back.png'),
 ];
 
-for (const texture of skyboxTextures) {
-  skyBoxMaterial.push(new THREE.MeshBasicMaterial({map: texture, side: THREE.BackSide}));
-};
 
-const skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
-
-const skybox = new THREE.Mesh(skyboxGeometry, skyBoxMaterial);
 
 // surface
-const surfaceMap =[ textureLoader.load('./assets/textures/treadmill.jpg')]
+const surfaceMap =textureLoader.load('./assets/textures/treadmill.jpg');
 
 // ball
-const ballMap = [textureLoader.load('./assets/textures/beachball.jpg')];
+const ballMap = textureLoader.load('./assets/textures/beachball.jpg');
 // boxes
 const obstacleMapRed = textureLoader.load('./assets/textures/redWood.jpg');
 const obstacleMapGreen = textureLoader.load('./assets/textures/greenWodd.jpg');
@@ -63,6 +50,9 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// instantiating skybox
+const skybox = new Skybox(skyboxTextures)
+
 //stage logic
 const surfacePool = [];
 const powerUpsPool = [];
@@ -70,13 +60,16 @@ let obstacles;
 let powerUpActive = false;
 let elapsedTime = 0;
 let isplayerAlive = true;
+let gameSpeed = 0.2
 
 
 
 
 // displays
 const scoreDisplay = new ScoreDisplay();
-
+const darkLayer = new DarkLayer();
+const gameOverText = new GameOverUI({text: 'Game Over', top: '40%', left: '38%', color: '	#FFD580'});
+const playButton = new PlayButton();
 
 // Add lights
 const light = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -87,19 +80,11 @@ scene.add(light);
 const ambientLight = new THREE.AmbientLight(0x404040); // Set the color as needed
 scene.add(ambientLight);
 
-
-
-
-
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
-// adding skybox
-
-
-
-scene.add(skybox);
+scene.add(skybox.mesh);
 
 
 // Set up Cannon.js world
@@ -107,12 +92,10 @@ const world = new CANNON.World();
 world.gravity.set(0, -9.8, 0); // Adjust gravity as needed
 const timeStep = 1 / 60;
 
-
-
-
+// the player (ball)
 const ball = new Ball({
   radius: 0.5,
-  map: ballMap[0],
+  map: ballMap,
   mass: 1,
 })
 ball.meshShpere.position.y = 3;
@@ -120,39 +103,12 @@ ball.cannonSphere.position.y = 3;
 
 
 ball.setCollide(ball.meshShpere.position, ball.radius);
-
-// scene.add(surface.meshSurface);
 scene.add(ball.meshShpere)
 world.addBody(ball.cannonSphere);
 
-// const cannonDebugger = new CannonDebugger(scene, world, {})
-
-
-
-window.addEventListener('resize', () => {
- const newWidth = window.innerWidth;
- const newHeight = window.innerHeight;
-
- camera.aspect = newWidth / newHeight;
- camera.updateProjectionMatrix();
-
- renderer.setSize(newWidth, newHeight);
-});
-
-
-
-
+// debug
 const controls = new OrbitControls(camera, renderer.domElement)
-let speed = 0.2
 
-// functions
-
-function spawnPowerUp(x, y, z) {
-  const powerUp = new PowerUp();
-  powerUp.meshPowerUp.position.set(x, y, z);
-  powerUp.setCollide(powerUp.meshPowerUp.position, 1);
-  return powerUp;
-}
 
 
 // Animation function
@@ -160,23 +116,29 @@ const animate = () => {
   requestAnimationFrame(animate);
   world.step(timeStep);
   TWEEN.update();
-  // composer.render();
   // cannonDebugger.update();
   elapsedTime += timeStep;
+
+  // Death logic
   if (!isplayerAlive) {
-    speed = 0.01;
-
-
+    gameSpeed = 0.01;
+    darkLayer.addLayer();
+    gameOverText.addText();
+    playButton.addButton();
+    scoreDisplay.freezeScore();
   }
 
   // Update positions based on Cannon.js bodies
   ball.meshShpere.position.copy(ball.cannonSphere.position);
   ball.meshShpere.quaternion.copy(ball.cannonSphere.quaternion);
   ball.updateCollide();
+
+  // death detector
   if (ball.meshShpere.position.y <= - 2 || ball.meshShpere.position.z >= 15) {
     isplayerAlive = false;
   }
 
+  // Changing the state of obstacles during the powerUp active
   if (powerUpActive) {
 
     surfacePool.forEach((surface) => {
@@ -195,27 +157,23 @@ const animate = () => {
     })
   }
 
-  // ball.collideSphere.copy(ball.meshShpere.geometry.boundingBox).applyMatrix4(ball.meshShpere.matrixWorld);
+  //----------------------- Handling the Surfaces and obstacles spawning system ----------------//
   surfacePool.forEach((surface, index) => {
-    surface.move(speed);
-    
+    surface.move(gameSpeed);
 
+    //-------------------------- Surface Loop 
     
- 
-
-    // Check if the surface is no longer visible
-    // recycle then and add obstacles and powerups
     if (surface.meshSurface.position.z >= 20) {
       // removing existing obstacles
       surface.getObstacles().forEach((o, i) => {
         world.remove(o.cannonSurface);
         scene.remove(o.meshSurface);
+        // score
         scoreDisplay.incrementScore(5)
       })
-
+      // recycle then and add obstacles and powerups
       recycleSurfaceEntity(surfacePool[index], -180, true);
       // adding obstacles
-      console.log(obstacleMapRed)
       obstacles = surfacePool[index].spawObstacles(1, obstacleMapRed);
       obstacles.forEach((obs) => {
         scene.add(obs.meshSurface);
@@ -223,6 +181,7 @@ const animate = () => {
       });
     };
 
+    //------------------------- PowerUp Spawning
     
     // adding powerups
     if (elapsedTime >= 20) {
@@ -235,9 +194,11 @@ const animate = () => {
       elapsedTime = 0; // Reset elapsed time
     }
 
-   //  obstacles animation
+
+    //---------------------- Obstacles Aanimation
+
     surface.getObstacles().forEach((obs, i) => {
-      obs.moveObs(speed);
+      obs.moveObs(gameSpeed);
 
       obs.meshSurface.position.copy(obs.cannonSurface.position);
       obs.meshSurface.quaternion.copy(obs.cannonSurface.quaternion);
@@ -250,36 +211,47 @@ const animate = () => {
      
     })
 
-    // powerups animation
+    // ---------------------- PowerUp Animations
+
     powerUpsPool.forEach((pU, i) => {
-      pU.move(speed);
+      pU.move(gameSpeed);
       pU.rotate(0.008);
 
       if (!powerUpActive && pU.checkCollision(ball)) {
         powerUpActive = true;
-        speed = 0.2;
+        gameSpeed = 0.2;
         pU.triggerCollision();
+       
         setTimeout(() => {
-          speed = 0.2;
+          gameSpeed = 0.2;
           powerUpActive = false;
-        }, 5000);
+        }, 5000);  // time that the powerup will be active
       }
       pU.updateCollide();
+      // removing
       if (pU.meshPowerUp.position.z >=22) {
         scene.remove(pU.meshPowerUp);
         powerUpsPool.shift();
       }
     })
-   
-
 
   });
 
-  //
-
-  // Render the scene
+  // -------------------------------- Render ------------------------------
   renderer.render(scene, camera);
 };
+
+
+// listeners
+window.addEventListener('resize', () => {
+  const newWidth = window.innerWidth;
+  const newHeight = window.innerHeight;
+ 
+  camera.aspect = newWidth / newHeight;
+  camera.updateProjectionMatrix();
+ 
+  renderer.setSize(newWidth, newHeight);
+ });
 
 //Player Controller
 document.addEventListener('keydown', (event) => {
@@ -307,8 +279,23 @@ document.addEventListener('keyup', (event) => {
 
 
 for (let i = 0; i < 10; i++) {
-  surfacePool.push(createSurfaceEntity(scene, world, surfacePool[i - 1], surfaceMap[0]));
+  surfacePool.push(createSurfaceEntity(scene, world, surfacePool[i - 1], surfaceMap));
 }
+
+// moblie
+
+document.addEventListener('touchstart', (event) => {
+  touchStartX = event.touches[0].clientX;
+});
+
+document.addEventListener('touchmove', (event) => {
+  touchEndX = event.touches[0].clientX;
+  handleTouchMove(ball);
+});
+
+document.addEventListener('touchend', () => {
+  handleTouchEnd(ball);
+});
 
 
 // Start the animation loop
