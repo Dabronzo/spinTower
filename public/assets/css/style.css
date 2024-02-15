@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.gameOver {
+    position: absolute;
+    font-size: 80px;
+    font-family: 'Roboto', sans-serif;
+    z-index: 3;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: fade-in 3s;
+}
+
+.playAgain {
+    font-size: 3rem;
+    font-family: 'Roboto', sans-serif;
+    position: absolute;
+    background-color: #6B5B95; 
+    color: #FFD700; 
+    border: none;
+    cursor: pointer;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 58px;
+    z-index: 3;
+    border-radius: 8px;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    line-height: 40px; 
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.instructions {
+    position: fixed;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    animation: fade-in 3s;
+  }
+
+
+@media (max-width: 600px) {
+    .gameOver{
+        font-size: 17px;
+    }
+    .playAgain{
+        font-size: 1.5rem;
+        width: 80px;
+        height: 40px;
+    }
+    .instructions {
+        font-size: 14px;
+    }
+    
+}

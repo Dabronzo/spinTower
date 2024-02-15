@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import * as TWEEN from '@tweenjs/tween.js';
+import {BoxGeometry, MeshStandardMaterial, Mesh, Vector3, Box3, Texture } from 'three';
+import { Tween } from '@tweenjs/tween.js';
 import { Body, Box, Vec3 } from 'cannon';
 
 /**
@@ -7,12 +7,12 @@ import { Body, Box, Vec3 } from 'cannon';
  * @class
  * takes widith, leght and color as agruments.
  */
-class SurfaceMesh extends THREE.Mesh {
+class SurfaceMesh extends Mesh {
   constructor({width, height, map, depth}) {
     
     super(
-        new THREE.BoxGeometry(width, height, depth),
-        new THREE.MeshStandardMaterial({map, transparent: true})
+        new BoxGeometry(width, height, depth),
+        new MeshStandardMaterial({map, transparent: true})
     )
     this.width = width;
     this.height = height;
@@ -30,12 +30,12 @@ class SurfaceMesh extends THREE.Mesh {
   // Methods will be here
 }
 
-class TreadmillMesh extends THREE.Mesh {
+class TreadmillMesh extends Mesh {
   constructor({width, height, depth, map}) {
 
     super(
-        new THREE.BoxGeometry(width, height, depth),
-        new THREE.MeshStandardMaterial({ map })
+        new BoxGeometry(width, height, depth),
+        new MeshStandardMaterial({ map })
     )
     this.width = width;
     this.height = height;
@@ -109,6 +109,10 @@ export class SurfaceEntity {
 
     getObstacles() {
       return this.obstacles;
+    };
+
+    clearObstacles() {
+      this.obstacles = [];
     }
 }
 
@@ -117,7 +121,7 @@ export class ObstacleEntity {
   constructor({width, height, depth, map, mass}) {
     this.meshSurface = new SurfaceMesh({width, height, map, depth});
     this.cannonSurface = new CannonSurface({width, height, depth, mass});
-    this.collideSurface = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+    this.collideSurface = new Box3(new Vector3(), new Vector3());
     this.exploded = false;
     this.isCollisionDetected = false;
   };
@@ -152,7 +156,7 @@ export class ObstacleEntity {
       const targetScale = { x: 5 * initialScale.x, y: 5 * initialScale.y, z: 5 * initialScale.z };
 
       // Create a new Tween
-      const scaleTween = new TWEEN.Tween(initialScale).to(targetScale, 500).onUpdate((scale) => {
+      const scaleTween = new Tween(initialScale).to(targetScale, 500).onUpdate((scale) => {
         this.meshSurface.scale.set(scale.x, scale.y, scale.z);
         
       });
@@ -166,7 +170,7 @@ export class ObstacleEntity {
   };
 
   setTexture(newTexture) {
-    if (!(newTexture instanceof THREE.Texture)) {
+    if (!(newTexture instanceof Texture)) {
       console.error('Invalid texture provided.');
       return;
     }

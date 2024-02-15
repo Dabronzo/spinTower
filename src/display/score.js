@@ -1,4 +1,4 @@
-
+import * as THREE from 'three';
 
 class GameDisplay {
   constructor() {
@@ -30,25 +30,32 @@ export class ScoreDisplay {
       this.scoreElement.style.fontSize = '24px';
 
       this.shouldFreeze = false;
-  
-      // Append the score element to the document body
-      document.body.appendChild(this.scoreElement);
-  
+      
       // Initial update
       this.updateScore();
     }
 
-    freezeScore() {
-      this.shouldFreeze = true;
-    };
-
-  
     updateScore() {
       if (!this.shouldFreeze){
               // Update the text content of the score element
       this.scoreElement.textContent = `Score: ${this.score}`;
       };
     };
+
+    addScoreDisplay() {
+      document.body.appendChild(this.scoreElement);
+    }
+
+    freezeScore(bool) {
+      this.shouldFreeze = bool;
+    };
+
+    setScore(score) {
+      this.score = score;
+      this.updateScore();
+    }
+
+
 
     incrementScore(points = 10) {
       if (!this.shouldFreeze) {
@@ -76,6 +83,10 @@ export class DarkLayer extends GameDisplay {
 
   };
 
+  resetCreation() {
+    this.isCreated = false;
+  }
+
   addLayer() {
     if(this.isCreated) return
     document.body.appendChild(this.layer);
@@ -84,15 +95,17 @@ export class DarkLayer extends GameDisplay {
 
   removelayer() {
     document.body.removeChild(this.layer);
+    this.updateCreated();
   }
 }
 
 export class GameOverUI extends GameDisplay {
-  constructor({ text, color }) {
+  constructor({ text, color, id }) {
     super();
     // Big text
     this.gameText = document.createElement('div');
     this.gameText.textContent = text;
+    this.gameText.id = id;
 
     // Assign the 'gameOver' class to the created div
     this.gameText.classList.add('gameOver');
@@ -120,21 +133,28 @@ export class GameOverUI extends GameDisplay {
 }
 
 export class PlayButton extends GameDisplay {
-  constructor() {
+  constructor(callback) {
     super();
     this.playButton = document.createElement('button');
     this.playButton.type = 'button';
-    this.playButton.textContent = 'Play Again';
     this.playButton.classList.add('playAgain');
+    this.setupEventListener(callback);
+  }
+
+  setupEventListener(callback) {
+    console.log('hahahah')
     this.playButton.addEventListener('click', () => {
-      // Handle the play again button click event
-      // You can implement the logic to restart the game here
-      console.log('Play again button clicked!');
+      if (typeof callback === 'function') {
+        callback();
+        console.log('herer')
+        document.body.removeChild(this.playButton)
+      }
     });
   }
 
-  addButton() {
+  addButton(text) {
     if (this.isCreated) return;
+    this.playButton.textContent = text;
     setTimeout(() => {
       document.body.appendChild(this.playButton);
     }, 2000); // Adjust the timeout to match the transition duration
@@ -142,5 +162,32 @@ export class PlayButton extends GameDisplay {
     this.updateCreated();
   }
 
+  removeText() {
+    document.body.removeChild(this.playButton)
+  }
 
+
+};
+
+export class Tutorial extends GameDisplay {
+  constructor(text) {
+    super();
+    
+    // Create a div element for the centered text
+    this.centeredTextElement = document.createElement('div');
+    this.centeredTextElement.textContent = text;
+    this.centeredTextElement.classList.add('instructions');
+  }
+
+  addCenteredText() {
+    if (!this.isCreated) {
+      document.body.appendChild(this.centeredTextElement);
+      this.updateCreated();
+    }
+  }
+
+  removeCenteredText() {
+    document.body.removeChild(this.centeredTextElement);
+
+  }
 }

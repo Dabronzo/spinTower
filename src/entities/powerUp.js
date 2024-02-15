@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-
-  
   // Connect the vertices to create faces
 
 
@@ -11,7 +9,8 @@ class PowerUpMesh extends THREE.Mesh {
     constructor() {
         super();
         const loader = new GLTFLoader();
-        loader.load('../../assets/startPowerUp.glb', (gltf) => {
+        loader.load('/spinTower/assets/models/startPowerUp.glb', (gltf) => {
+            console.log('here')
           const model = gltf.scene;
     
           

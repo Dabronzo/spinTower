@@ -1,6 +1,7 @@
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
 
+
 class BallMesh extends THREE.Mesh {
     constructor({radius, map}) {
         super(
@@ -56,10 +57,8 @@ export class Ball {
     }
 
     jump() {
-        if (this.cannonSphere.collisionResponse) {
-            this.cannonSphere.applyImpulse(this.jumpForce, this.cannonSphere.position);
-        }
-       
+        if (this.cannonSphere.position.y > 1) return;
+        this.cannonSphere.applyImpulse(this.jumpForce, this.cannonSphere.position);
     };
 
     setVelocity(direction) {
@@ -69,7 +68,7 @@ export class Ball {
 
     stopMovement() {
         const currentVelocity = this.cannonSphere.velocity;
-        this.cannonSphere.velocity.set(0, 0, 0);
+        this.cannonSphere.velocity.set(0, currentVelocity.y, currentVelocity.z);
     }
 
     moveRight() {
